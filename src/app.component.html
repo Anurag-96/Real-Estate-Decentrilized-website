@@ -1,0 +1,437 @@
+
+<main class="bg-[#1a1a1a] text-[#f8f9fa] min-h-screen">
+
+  <!-- HERO SECTION -->
+  <section id="home" 
+           class="relative h-screen flex items-center justify-center text-center p-4 bg-cover bg-center" 
+           style="background-image: url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop');">
+    
+    <!-- Dark overlay for text readability -->
+    <div class="absolute inset-0 bg-black/70"></div>
+
+    <div class="relative max-w-4xl mx-auto">
+      <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-4 animate-fade-in-down"
+          aria-label="Decentralized Real Estate Ownership">
+        Decentralized Real Estate Ownership
+      </h1>
+      <p class="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-8 animate-fade-in-up">
+        Secure property transactions on Sepolia testnet with transparent blockchain ownership.
+      </p>
+      <div class="flex items-center justify-center">
+        <button (click)="scrollTo('listings')"
+                class="bg-[#2d9bf0] text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-600 transform hover:scale-105 transition-all duration-150 ease-in-out"
+                aria-label="Scroll to property listings">
+          Explore Listings
+        </button>
+      </div>
+    </div>
+  </section>
+
+  @if (viewingProperty()) {
+    <section id="property-details" class="py-20 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto">
+        <button (click)="closePropertyDetails()" class="mb-8 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-150 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+          Back to Listings
+        </button>
+
+        <div class="bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-5 gap-0">
+            <div class="lg:col-span-3">
+              @if (viewingProperty()!.imageLoading) {
+                <div class="w-full h-full min-h-[400px] bg-gray-700 animate-pulse"></div>
+              } @else {
+                <img [src]="viewingProperty()!.imageUrl" [alt]="viewingProperty()!.name" class="w-full h-full object-cover min-h-[400px]">
+              }
+            </div>
+            <div class="lg:col-span-2 p-8 flex flex-col">
+              <h2 class="text-3xl font-bold text-white mb-2">{{ viewingProperty()!.name }}</h2>
+              <p class="text-2xl font-semibold text-[#2d9bf0] mb-4">{{ getFormattedPrice(viewingProperty()!.price) }}</p>
+
+              <div class="flex flex-wrap gap-2 mb-6">
+                @for (tag of viewingProperty()!.tags; track tag) {
+                  <span class="bg-gray-700 text-gray-300 text-xs font-medium px-2.5 py-1 rounded-full">{{ tag }}</span>
+                }
+              </div>
+
+              <div class="grid grid-cols-2 gap-4 text-sm text-gray-300 mb-6 border-t border-b border-gray-700 py-4">
+                <div><span class="font-semibold text-gray-400">Beds:</span> {{ viewingProperty()!.beds }}</div>
+                <div><span class="font-semibold text-gray-400">Baths:</span> {{ viewingProperty()!.baths }}</div>
+                <div><span class="font-semibold text-gray-400">Sqft:</span> {{ viewingProperty()!.sqft.toLocaleString() }}</div>
+                <div><span class="font-semibold text-gray-400">$/Sqft:</span> ${{ viewingProperty()!.pricePerSqft }}</div>
+                <div><span class="font-semibold text-gray-400">Type:</span> {{ viewingProperty()!.type }}</div>
+                <div><span class="font-semibold text-gray-400">Built:</span> {{ viewingProperty()!.yearBuilt }}</div>
+              </div>
+              
+              <div class="flex-grow">
+                 <h3 class="text-lg font-semibold text-white mb-3">Price History</h3>
+                 @if(viewingProperty()!.priceHistory.length > 0) {
+                   <ul class="text-sm text-gray-400 space-y-2">
+                     @for(hist of viewingProperty()!.priceHistory; track hist.date) {
+                       <li class="flex justify-between">
+                         <span>{{ hist.date }}</span>
+                         <span class="font-mono">{{ getFormattedPrice(hist.price) }}</span>
+                       </li>
+                     }
+                   </ul>
+                 } @else {
+                   <p class="text-sm text-gray-500">No public price history available.</p>
+                 }
+              </div>
+              
+              <button (click)="initiatePurchase(viewingProperty()!)" class="w-full bg-[#2d9bf0] text-white font-semibold py-3 px-6 rounded-lg mt-8 hover:bg-blue-600 transition-colors duration-150">
+                Simulate Purchase
+              </button>
+            </div>
+          </div>
+
+          <div class="p-8 border-t border-gray-700">
+             <h3 class="text-xl font-semibold text-white mb-4">Reviews</h3>
+             @if(viewingProperty()!.reviews.length > 0) {
+                @for(review of viewingProperty()!.reviews; track review.author) {
+                  <div class="mb-4 pb-4 border-b border-gray-700 last:border-b-0 last:pb-0">
+                    <div class="flex items-center mb-1">
+                      <div class="flex text-yellow-400">
+                        @for(star of getStarArray(review.rating); track $index) { <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg> }
+                        @for(star of getEmptyStarArray(review.rating); track $index) { <svg class="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg> }
+                      </div>
+                      <p class="ml-2 text-sm font-semibold text-gray-200">{{ review.author }}</p>
+                    </div>
+                    <p class="text-gray-400 text-sm">"{{ review.comment }}"</p>
+                  </div>
+                }
+             } @else {
+                <p class="text-sm text-gray-500">This property has no reviews yet.</p>
+             }
+          </div>
+        </div>
+      </div>
+    </section>
+  } @else {
+    <!-- LISTINGS GRID -->
+    <section id="listings" class="py-20 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto">
+        <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Property Listings</h2>
+
+        <div class="flex flex-wrap justify-center items-center gap-2 mb-12">
+          <span class="text-gray-400 text-sm mr-2">Display prices in:</span>
+          <button (click)="setCurrency('USD')" [class]="activeCurrency() === 'USD' ? 'bg-[#2d9bf0] text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'" class="px-3 py-1 text-sm font-semibold rounded-md transition-colors">$ USD</button>
+          <button (click)="setCurrency('INR')" [class]="activeCurrency() === 'INR' ? 'bg-[#2d9bf0] text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'" class="px-3 py-1 text-sm font-semibold rounded-md transition-colors">₹ INR</button>
+          <button (click)="setCurrency('KWD')" [class]="activeCurrency() === 'KWD' ? 'bg-[#2d9bf0] text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'" class="px-3 py-1 text-sm font-semibold rounded-md transition-colors">د.ك KWD</button>
+          <button (click)="setCurrency('RUB')" [class]="activeCurrency() === 'RUB' ? 'bg-[#2d9bf0] text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'" class="px-3 py-1 text-sm font-semibold rounded-md transition-colors">₽ RUB</button>
+        </div>
+        
+        @if (activeFilterTag()) {
+          <div class="max-w-3xl mx-auto text-center mb-8 p-3 bg-gray-800 rounded-lg flex items-center justify-center gap-4">
+            <p class="text-gray-300">
+              Filtering by: <span class="font-semibold text-[#2d9bf0] bg-gray-700 px-2 py-1 rounded-md">{{ activeFilterTag() }}</span>
+            </p>
+            <button (click)="clearFilter()" class="text-sm text-red-400 hover:text-red-300 font-semibold flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+              Clear Filter
+            </button>
+          </div>
+        }
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          @for (property of filteredListings(); track property.id) {
+          <div class="bg-gray-800 rounded-xl overflow-hidden shadow-2xl transition-all duration-300 hover:shadow-[#2d9bf0]/20 hover:scale-[1.02] transform group flex flex-col">
+            <div class="relative">
+              @if (property.imageLoading) {
+                <div class="w-full h-56 bg-gray-700 animate-pulse"></div>
+              } @else {
+                <img [src]="property.imageUrl" alt="{{ property.name }}" class="w-full h-56 object-cover">
+              }
+              <span class="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full text-white"
+                    [class]="property.status === 'New Listing' ? 'bg-teal-500' : 'bg-blue-500'">
+                {{ property.status }}
+              </span>
+            </div>
+            <div class="p-6 flex flex-col flex-grow">
+              <div class="flex justify-between items-start mb-2">
+                <h3 class="text-xl font-bold text-white pr-2">{{ property.name }}</h3>
+                <p class="text-lg font-semibold text-[#2d9bf0] whitespace-nowrap">{{ getFormattedPrice(property.price) }}</p>
+              </div>
+              <div class="text-gray-400 text-sm mb-4 flex items-center flex-wrap gap-x-3">
+                <span>{{ property.beds }} Beds</span>
+                <span class="text-gray-600">|</span>
+                <span>{{ property.baths }} Baths</span>
+                <span class="text-gray-600">|</span>
+                <span>{{ property.sqft.toLocaleString() }} sqft</span>
+              </div>
+               <div class="text-gray-500 text-xs mb-4 flex items-center flex-wrap gap-x-3 border-t border-b border-gray-700 py-2">
+                <span>{{ property.type }}</span>
+                <span class="text-gray-600">•</span>
+                <span>Built in {{ property.yearBuilt }}</span>
+                 <span class="text-gray-600">•</span>
+                <span>${{ property.pricePerSqft }}/sqft</span>
+              </div>
+              <div class="flex flex-wrap gap-2 mb-4">
+                @for (tag of property.tags; track tag) {
+                  <button (click)="setFilterTag(tag)" 
+                          class="text-xs font-medium px-2.5 py-1 rounded-full transition-colors duration-150"
+                          [class]="activeFilterTag() === tag ? 'bg-[#2d9bf0] text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'">
+                    {{ tag }}
+                  </button>
+                }
+              </div>
+              <button (click)="viewPropertyDetails(property)" class="w-full bg-[#2d9bf0] text-white font-semibold py-2 px-4 rounded-lg mt-auto group-hover:bg-blue-600 transition-colors duration-150">
+                View Details
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- HOW IT WORKS -->
+  <section id="how-it-works" class="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900">
+    <div class="max-w-5xl mx-auto text-center">
+      <h2 class="text-3xl md:text-4xl font-bold mb-12">How It Works</h2>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-4">
+        <!-- Step 1 -->
+        <div class="flex flex-col items-center max-w-xs">
+          <div class="bg-[#2d9bf0] rounded-full p-4 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">1. Browse & Select</h3>
+          <p class="text-gray-400 text-center">Explore our curated list of properties. Select any property to begin the ownership transfer simulation.</p>
+        </div>
+        
+        <div class="text-2xl text-[#2d9bf0] font-bold transform rotate-90 md:rotate-0 my-4 md:mx-8">→</div>
+
+        <!-- Step 2 -->
+        <div class="flex flex-col items-center max-w-xs">
+           <div class="bg-[#2d9bf0] rounded-full p-4 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5V4H4zm0 0l7 7m-7 0h5v5H4v-5zm0 0l7-7m7 0v5h5V4h-5zm0 0l-7 7m7 0h5v5h-5v-5zm0 0l-7-7" /></svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">2. Simulate Transaction</h3>
+          <p class="text-gray-400 text-center">Use our demo wallet to simulate a secure transaction on the Sepolia testnet. No real funds are used.</p>
+        </div>
+        
+        <div class="text-2xl text-[#2d9bf0] font-bold transform rotate-90 md:rotate-0 my-4 md:mx-8">→</div>
+
+        <!-- Step 3 -->
+        <div class="flex flex-col items-center max-w-xs">
+          <div class="bg-[#2d9bf0] rounded-full p-4 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">3. Verify on Explorer</h3>
+          <p class="text-gray-400 text-center">Receive a mock transaction hash and a link to view the immutable record on a Sepolia block explorer.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROPERTY SALES OVERVIEW -->
+  <section id="analytics" class="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900/50">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Property Sales Overview</h2>
+      <p class="text-center text-gray-400 mb-12 max-w-2xl mx-auto">A real-time look at our platform's transaction volume and property status breakdown.</p>
+      <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-2xl p-6 md:p-8 border border-gray-700">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          
+          <!-- Donut Chart -->
+          <div class="relative w-64 h-64 mx-auto">
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+              <!-- Background circle -->
+              <circle cx="60" cy="60" r="54" fill="none" stroke="#4a5568" stroke-width="12"></circle>
+              
+              <!-- In Process segment (blue) - drawn first (underneath) -->
+              <circle cx="60" cy="60" r="54" fill="none" stroke="#2d9bf0" stroke-width="12"
+                      stroke-linecap="round"
+                      class="chart-segment"
+                      [attr.stroke-dasharray]="circumference"
+                      [attr.stroke-dashoffset]="inProcessDashoffset()"></circle>
+                      
+              <!-- Sold segment (teal) - drawn second (on top) -->
+              <circle cx="60" cy="60" r="54" fill="none" stroke="#2dd4bf" stroke-width="12"
+                      stroke-linecap="round"
+                      class="chart-segment"
+                      [attr.stroke-dasharray]="circumference"
+                      [attr.stroke-dashoffset]="soldDashoffset()"></circle>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span class="text-4xl font-bold text-white">{{ chartData().total }}</span>
+              <span class="text-sm text-gray-400">Transactions</span>
+            </div>
+          </div>
+          
+          <!-- Legend & Stats -->
+          <div class="flex flex-col gap-6 text-lg">
+            <h3 class="text-2xl font-bold text-white border-b border-gray-700 pb-2 mb-4">Transaction Summary</h3>
+            <div class="flex items-center">
+              <span class="w-5 h-5 rounded-md bg-[#2dd4bf] mr-4"></span>
+              <div>
+                <span class="font-semibold text-white">{{ analyticsData.sold }} Properties Sold</span>
+                <span class="text-sm text-gray-400 block">{{ chartData().soldPercent.toFixed(1) }}%</span>
+              </div>
+            </div>
+            <div class="flex items-center">
+              <span class="w-5 h-5 rounded-md bg-[#2d9bf0] mr-4"></span>
+              <div>
+                <span class="font-semibold text-white">{{ analyticsData.inProcess }} In Process</span>
+                <span class="text-sm text-gray-400 block">{{ chartData().inProcessPercent.toFixed(1) }}%</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+  <style>
+    .chart-segment {
+      transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  </style>
+
+
+  <!-- TRANSACTION MODAL -->
+  @if(isTransactionModalOpen()) {
+    <div class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 animate-fade-in">
+      <div class="bg-gray-800 rounded-xl shadow-2xl p-6 md:p-8 border border-gray-700 w-full max-w-2xl relative">
+        
+        <button (click)="closeTransactionModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <h2 class="text-2xl font-bold text-center mb-6">Transaction Simulator</h2>
+
+        @if (!isWalletConnected()) {
+          <div class="text-center">
+            <h3 class="text-xl font-semibold mb-4">Connect to Begin</h3>
+            <p class="text-gray-400 mb-6">Connect a demo wallet to simulate your property purchase.</p>
+            <button (click)="connectWallet()"
+                    class="bg-[#2d9bf0] text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-600 transform hover:scale-105 transition-all duration-150 ease-in-out">
+              Connect Demo Wallet
+            </button>
+          </div>
+        } @else {
+          <div>
+            <div class="mb-6">
+              <h3 class="font-semibold text-lg">Property Selected:</h3>
+              <p class="text-[#2d9bf0]">{{ selectedPropertyForTransaction().name }}</p>
+            </div>
+            
+            <div class="border border-gray-700 rounded-lg mb-6">
+              <table class="w-full text-left">
+                <tbody>
+                  <tr class="border-b border-gray-700">
+                    <td class="p-3 font-semibold text-gray-400">To</td>
+                    <td class="p-3 text-sm font-mono break-all">{{ transactionDetails().to }}</td>
+                  </tr>
+                  <tr class="border-b border-gray-700">
+                    <td class="p-3 font-semibold text-gray-400">Value</td>
+                    <td class="p-3 font-mono">{{ transactionDetails().value }}</td>
+                  </tr>
+                  <tr class="border-b border-gray-700">
+                    <td class="p-3 font-semibold text-gray-400">Gas</td>
+                    <td class="p-3 font-mono">{{ transactionDetails().gas }}</td>
+                  </tr>
+                  <tr>
+                    <td class="p-3 font-semibold text-gray-400">Data</td>
+                    <td class="p-3 font-mono">Purchase Token Transfer</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <button (click)="simulateTransaction()" 
+                    [disabled]="isSimulating()"
+                    class="w-full text-white font-semibold py-3 px-8 rounded-lg shadow-lg transition-all duration-150 ease-in-out flex items-center justify-center"
+                    [class]="isSimulating() ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#2d9bf0] hover:bg-blue-600'">
+              @if(isSimulating()) {
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              } @else {
+                Simulate Transaction
+              }
+            </button>
+
+            @if (transactionLogs().length > 0) {
+              <div class="mt-6 bg-black/50 rounded-lg p-4 font-mono text-sm text-gray-300 h-40 overflow-y-auto">
+                @for (log of transactionLogs(); track $index) {
+                  <p class="mb-1">
+                    <span class="text-gray-500">{{ log.timestamp }} → </span>
+                    @if (log.isLink) {
+                      <a href="#" class="text-[#2d9bf0] underline hover:text-blue-400">{{ log.message }}</a>
+                    } @else {
+                      <span>{{ log.message }}</span>
+                    }
+                  </p>
+                }
+              </div>
+            }
+
+            @if (transactionHash()) {
+              <div class="mt-4 p-4 bg-gray-900 rounded-lg border border-gray-700">
+                <label for="tx-hash" class="block text-sm font-medium text-gray-400 mb-2">Full Transaction Hash</label>
+                <div class="flex flex-col sm:flex-row items-stretch gap-2">
+                  <input readonly id="tx-hash" type="text" [value]="transactionHash()!" class="flex-grow bg-black/50 p-2 rounded-md font-mono text-sm border-gray-600 border w-full text-gray-200 focus:ring-2 focus:ring-[#2d9bf0] focus:outline-none">
+                  <button (click)="copyToClipboard(transactionHash())" 
+                          class="w-full sm:w-auto flex-shrink-0 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-150 flex items-center justify-center gap-2">
+                    @if(!isCopied()) {
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                      <span>Copy</span>
+                    } @else {
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                      </svg>
+                      <span class="text-green-400">Copied!</span>
+                    }
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ABOUT DECENTRALIZATION -->
+  <section id="about" class="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-8">About Decentralization</h2>
+      <p class="text-lg text-gray-300 text-center mb-10">
+        Blockchain technology fundamentally transforms real estate by creating a transparent, secure, and efficient system for property ownership and transfer. By removing traditional intermediaries, we reduce costs and complexity.
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-center">
+        <div class="bg-gray-800 p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-[#2d9bf0] mb-2">Immutable Ownership</h3>
+          <p class="text-gray-400">Ownership records are permanently stored on the blockchain, preventing fraud and unauthorized alterations.</p>
+        </div>
+        <div class="bg-gray-800 p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-[#2d9bf0] mb-2">Transparent History</h3>
+          <p class="text-gray-400">Every transaction is publicly viewable, creating a clear and verifiable chain of title for each property.</p>
+        </div>
+        <div class="bg-gray-800 p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-[#2d9bf0] mb-2">No Intermediaries</h3>
+          <p class="text-gray-400">Peer-to-peer transactions executed by smart contracts reduce reliance on banks, lawyers, and agents.</p>
+        </div>
+        <div class="bg-gray-800 p-6 rounded-lg">
+          <h3 class="text-xl font-semibold text-[#2d9bf0] mb-2">Fractional Ownership</h3>
+          <p class="text-gray-400">Assets can be tokenized, allowing multiple investors to own a share of a single property, increasing liquidity.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="text-center py-8 px-4 border-t border-gray-800">
+    <p class="text-gray-500 text-sm">
+      Demo using Sepolia testnet • No real transactions • For demonstration only
+    </p>
+  </footer>
+
+</main>

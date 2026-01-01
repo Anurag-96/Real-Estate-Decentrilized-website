@@ -1,0 +1,5 @@
+{
+  "name": "Decentralized Real Estate",
+  "description": "A minimalist, single-page website demonstrating decentralized real estate ownership with a dummy Sepolia testnet transaction simulation.",
+  "requestFramePermissions": []
+}
