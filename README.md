@@ -1,4 +1,3 @@
-View  app in AI Studio: https://ai.studio/apps/drive/17XjeidNsfqElr8YbXUrYjnIdEPNQWUvE
 
 ## Run Locally
 
